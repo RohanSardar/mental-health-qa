@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Health Q&A Assistant</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.375rem;
+            padding: 1rem;
+        }
+        
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+        }
+        
+        .user-message {
+            background-color: var(--bs-primary);
+            color: white;
+            margin-left: 2rem;
+        }
+        
+        .assistant-message {
+            background-color: var(--bs-secondary);
+            margin-right: 2rem;
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 0.75rem;
+            background-color: var(--bs-secondary);  /* same as assistant bubble */
+            color: white;  /* keep text visible */
+            margin-right: 2rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .status-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+        }
+        
+        .health-check {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid var(--bs-border-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="text-center">
+                    <h1 class="display-4 mb-3">
+                        <i class="fas fa-notes-medical text-primary me-2"></i>
+                        Mental Health Q&A Assistant
+                    </h1>
+                    <p class="lead text-muted">
+                        A compassionate finetuned Gemma 3 AI assistant for mental health support and guidance
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status indicator -->
+        <div id="status-indicator" class="status-indicator">
+            <div class="badge bg-secondary">
+                <i class="fas fa-circle me-1"></i>
+                <span id="status-text">Checking status...</span>
+            </div>
+        </div>
+
+        <!-- Main Interface -->
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <!-- Chat Container -->
+                <div id="chat-container" class="chat-container mb-3">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-comments fa-3x mb-3"></i>
+                        <p>Welcome! I'm here to provide mental health support and guidance.</p>
+                        <p class="small">Please feel free to ask me about stress, anxiety, coping strategies, or any mental health concerns.</p>
+                    </div>
+                </div>
+
+                <!-- Typing Indicator -->
+                <div id="typing-indicator" class="typing-indicator">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                        <span>Assistant is thinking...</span>
+                    </div>
+                </div>
+
+                <!-- Input Form -->
+                <form id="question-form" class="mb-3">
+                    <div class="input-group">
+                        <textarea 
+                            id="question-input" 
+                            class="form-control" 
+                            placeholder="Share what's on your mind... How can I help you today?"
+                            rows="3"
+                            required
+                        ></textarea>
+                        <button class="btn btn-primary" type="submit" id="send-btn">
+                            <i class="fas fa-paper-plane me-1"></i>
+                            Send
+                        </button>
+                    </div>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle me-1"></i>
+                        This assistant provides general mental health guidance. For emergencies, please contact professional services.
+                    </div>
+                </form>
+
+                <!-- Example Questions -->
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2">Example questions you can ask:</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-outline-secondary btn-sm example-btn" data-question="I've been feeling anxious lately. What are some coping strategies?">
+                            Anxiety coping strategies
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm example-btn" data-question="How can I improve my sleep when I'm stressed?">
+                            Sleep and stress
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm example-btn" data-question="What are some mindfulness exercises I can try?">
+                            Mindfulness exercises
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm example-btn" data-question="How do I know when to seek professional help?">
+                            When to seek help
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Emergency Resources -->
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Emergency Resources
+                    </h6>
+                    <p class="mb-1"><strong>National Tele Mental Health Programme of India:</strong> CALL to 18008914416</p>
+                    <p class="mb-1"><strong>Tele MANAS:</strong> 14416</p>
+                    <p class="mb-0 small">If you're experiencing a mental health emergency, please contact these resources immediately.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Modal -->
+        <div class="modal fade" id="feedbackModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Feedback</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="feedback-form">
+                            <div class="mb-3">
+                                <label class="form-label">How helpful was this response?</label>
+                                <div class="btn-group d-flex" role="group">
+                                    <input type="radio" class="btn-check" name="rating" id="rating1" value="1">
+                                    <label class="btn btn-outline-warning" for="rating1">
+                                        <i class="fas fa-star"></i>
+                                    </label>
+                                    <input type="radio" class="btn-check" name="rating" id="rating2" value="2">
+                                    <label class="btn btn-outline-warning" for="rating2">
+                                        <i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                    </label>
+                                    <input type="radio" class="btn-check" name="rating" id="rating3" value="3">
+                                    <label class="btn btn-outline-warning" for="rating3">
+                                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                    </label>
+                                    <input type="radio" class="btn-check" name="rating" id="rating4" value="4">
+                                    <label class="btn btn-outline-warning" for="rating4">
+                                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                    </label>
+                                    <input type="radio" class="btn-check" name="rating" id="rating5" value="5">
+                                    <label class="btn btn-outline-warning" for="rating5">
+                                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="feedback-text" class="form-label">Additional feedback (optional)</label>
+                                <textarea class="form-control" id="feedback-text" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="submit-feedback">Submit Feedback</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', path='app.js') }}"></script>
+</body>
+</html>
